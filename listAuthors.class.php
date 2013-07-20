@@ -8,7 +8,11 @@ class listAuthors
 {
 
     private $errorWPMSNotEnabled = "[ListAuthors] Sorry, You need to enable Multisite before you can use this plugin.";
+    private $sqlGetAuthorsID = "SELECT ID, user_nicename from %s ORDER BY %s LIMIT %d";
+    private $sqlGetAuthorsPosts =
+        "SELECT ID FROM wp_%d_posts WHERE post_status='publish' AND post_type='post' AND post_author=%d ORDER BY ID DESC LIMIT 5";
     private $timeFormat = "%m/%d/%Y at %l:%M %p";
+
 
     public function __construct()
     {
@@ -32,9 +36,8 @@ class listAuthors
     private function getAuthorIDs($orderBy = "RAND()", $limit = 50)
     {
         global $wpdb;
-        $query = "SELECT ID, user_nicename from $wpdb->users ORDER BY %s LIMIT %d";
         $authorIDs = $wpdb->get_results(
-            $wpdb->prepare($query, $orderBy, $limit)
+            $wpdb->prepare($this->sqlGetAuthorsID, $wpdb->users, $orderBy, $limit)
         );
         return $authorIDs;
     }
@@ -60,8 +63,7 @@ class listAuthors
 
             $posts = $wpdb->get_col(
                 $wpdb->prepare(
-                    "SELECT ID FROM wp_%d_posts WHERE post_status='publish' AND " .
-                    "post_type='post' AND post_author=%d ORDER BY ID DESC LIMIT 5",
+                    $this->sqlGetAuthorsPosts,
                     $currentAuthor->primary_blog,
                     $singleUserID->ID
                 )
@@ -74,11 +76,6 @@ class listAuthors
             return true;
 
         }
-
-    }
-
-    private function getDisplay()
-    {
 
     }
 
