@@ -12,6 +12,16 @@ if (!class_exists('ListAuthorDisplay')) {
     class ListAuthorDisplay
     {
 
+        private static $msgNoElements = 'Sorry, no author found.';
+
+        public function __construct($array = array())
+        {
+            if (empty($array)) {
+                return $this->msgNoElements;
+            }
+
+        }
+
     }
     //end class
 
