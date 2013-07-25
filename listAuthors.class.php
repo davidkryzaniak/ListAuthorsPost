@@ -32,10 +32,11 @@ class listAuthors
         $theAuthorsIDs = $this->getAuthorIDs();
         $postsByAuthors = $this->getPostsByAuthorsIDs($theAuthorsIDs);
 
-        print_r(
-            $postsByAuthors
-        );
-        return 'Hello, World';
+        if (!function_exists('createListAuthorDisplay')) {
+            require_once('ListAuthorDisplay.php');
+        }
+
+        return createListAuthorDisplay($postsByAuthors);
     }
 
     private function getAuthorIDs($orderBy = "RAND()", $limit = 50)
@@ -61,6 +62,7 @@ class listAuthors
             // Get user data
             $currentAuthor = get_userdata($singleUserID->ID);
 
+            //get the table name, start with the table prefix
             $table = $wpdb->base_prefix;
             //if this is the main site, the table we need to query wont have the "%d_" in the table name.
             if ($currentAuthor->primary_blog == 1) {
@@ -76,12 +78,23 @@ class listAuthors
                 )
             );
 
-            $listOfPostsByAuthorID[$singleUserID->user_nicename] = $posts;
+            $listOfPostsByAuthorID[$singleUserID->user_nicename] = $this->getSinglePostDetails(
+                $currentAuthor->primary_blog,
+                $posts
+            );
 
         }
-        //end foreach
 
         return $listOfPostsByAuthorID;
+    }
+
+    private function getSinglePostDetails($blogID = 1, $arrayOfPostIDs = array())
+    {
+        $results = array();
+        foreach ($arrayOfPostIDs as $singlePostID) {
+            $results[] = get_blog_post($blogID, $singlePostID);
+        }
+        return $results;
     }
 
 
