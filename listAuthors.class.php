@@ -8,20 +8,29 @@ class listAuthors
 {
 
     private $errorWPMSNotEnabled = "[ListAuthors] Sorry, You need to enable Multisite before you can use this plugin.";
-    private $sqlGetAuthorsID = "SELECT ID, user_nicename from *|table|* ORDER BY %s LIMIT %d";
+    private $sqlGetAuthorsID = "SELECT ID, user_nicename from *|table|* ORDER BY user_nicename ASC LIMIT %d";
     private $sqlGetAuthorsPosts =
-        "SELECT ID FROM *|table|* WHERE post_status='publish' AND post_type='post' AND post_author=%d ORDER BY ID DESC LIMIT 5";
+        "SELECT ID FROM *|table|* WHERE post_status='publish' AND post_type='post' AND post_author=%d ORDER BY ID DESC LIMIT %d";
 
     private $TABLE_IDENTIFIER = '*|table|*';
-    private $TIME_FORMAT = "%m/%d/%Y at %l:%M %p";
 
 
+    /**
+     * Constuctor: Initializes the shortcode with WP
+     *
+     * to-do: Input params (AKA, "limit 20 users..." or "limit 20 posts per user...")
+     */
     public function __construct()
     {
         //initialize the shortcode. If a shortcode is used, call listAuthorsRunner()
         add_shortcode('ListAuthors', array($this, 'listAuthorsRunner'));
     }
 
+    /**
+     * This is the "heart" of the plugin. First gets the users, then their posts, and finally builds the HTML.
+     *
+     * @return string HTML output
+     */
     public function listAuthorsRunner()
     {
         //bad things happen if you're not on a multisite.
@@ -29,30 +38,44 @@ class listAuthors
             return $this->errorWPMSNotEnabled;
         }
 
-        $theAuthorsIDs = $this->getAuthorIDs();
+        $theAuthorsIDs = $this->getAuthorIDs(); //get the authors
         $postsByAuthors = $this->getPostsByAuthorsIDs($theAuthorsIDs);
 
+        //If there isn't a display setup yet, pull the default
         if (!function_exists('createListAuthorDisplay')) {
             require_once('ListAuthorDisplay.php');
         }
 
-        return createListAuthorDisplay($postsByAuthors);
+        //echo or return the HTML
+        return createListAuthorDisplay($postsByAuthors); //using a return for future expansion
     }
 
-    private function getAuthorIDs($orderBy = "RAND()", $limit = 50)
+    /**
+     * Find $limit users and get their ID and "Friendly name" (how their name appears on the site)
+     *
+     * @param int $limit Max number of users to return
+     * @return array
+     */
+    private function getAuthorIDs($limit = 50)
     {
         global $wpdb;
         $authorIDs = $wpdb->get_results(
             $wpdb->prepare(
                 $this->getTheTable($this->sqlGetAuthorsID, $wpdb->users),
-                $orderBy,
                 $limit
             )
         );
         return $authorIDs;
     }
 
-    private function getPostsByAuthorsIDs($listOfUserIDs = null)
+    /**
+     * Find $limit posts by the author from an array of post
+     *
+     * @param null $listOfUserIDs
+     * @param int $limit
+     * @return array
+     */
+    private function getPostsByAuthorsIDs($listOfUserIDs = null, $limit = 5)
     {
         global $wpdb;
         $listOfPostsByAuthorID = array();
@@ -74,11 +97,12 @@ class listAuthors
             $posts = $wpdb->get_col(
                 $wpdb->prepare(
                     $this->getTheTable($this->sqlGetAuthorsPosts, $table),
-                    $singleUserID->ID
+                    $singleUserID->ID,
+                    $limit
                 )
             );
 
-            $listOfPostsByAuthorID[$singleUserID->user_nicename] = $this->getSinglePostDetails(
+            $listOfPostsByAuthorID[$singleUserID->ID] = $this->getSinglePostDetails(
                 $currentAuthor->primary_blog,
                 $posts
             );
@@ -88,6 +112,13 @@ class listAuthors
         return $listOfPostsByAuthorID;
     }
 
+    /**
+     * This function gets the details of the array of posts based on an array of post IDs
+     *
+     * @param int $blogID We need to know the ID of the blog
+     * @param array $arrayOfPostIDs the array of posts.
+     * @return array
+     */
     private function getSinglePostDetails($blogID = 1, $arrayOfPostIDs = array())
     {
         $results = array();
@@ -97,7 +128,14 @@ class listAuthors
         return $results;
     }
 
-
+    /**
+     * To my dismay, the $wpdb->prepare() wraps %s in single quotes. Typically, this isn't a problem, but I need to send
+     * in the table to the query. This function replaces *|table|* with the correct table.
+     *
+     * @param string $sql
+     * @param string $table
+     * @return strind The SQL statement.
+     */
     private function getTheTable($sql = '', $table = '')
     {
         return str_replace(
@@ -109,4 +147,5 @@ class listAuthors
 
 }
 
+//Run this shortcode
 new listAuthors();

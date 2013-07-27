@@ -9,49 +9,57 @@
  */
 if (!function_exists('createListAuthorDisplay')) {
 
+    /*
+     * This is a simple function that handles the display of the
+     *
+     * Don't like way this plugin looks? Copy this function in to your functions.php and make all the changes you'd like!
+     */
     function createListAuthorDisplay($arrayOfPostsByAuthor = array())
     {
         if (empty($arrayOfPostsByAuthor)) {
             return 'Sorry, no author found.';
-        }
+        }?>
 
-        /**
-         *  I'm going to keep this mostly procedural code. This is for ease of modifying.
-         *
-         * NOTE!
-         * If you don't like the way this gets displayed:
-         * 1.) copy this file into your theme's directory
-         * 2.) Make your changes to the copy
-         * 3.) In your functions.php, add
-         *          require_once('/path/to/your/version/of/ListAuthorDisplay.php');
-         */
+        <style>
+            .author-gravitar-image {
+                float: left;
+                padding-right: 1em
+            }
 
-        //---START THIS------------------------
-        ?>
-        <div class="list-author-snippet-wrapper"></div>
+            .list-author-single {
+                clear: both
+            }
+
+            .list-author-single .author-nice-name {
+                font-size: 1.2em;
+                font-weight: 700
+            }
+
+            .list-author-single ul.list-of-posts {
+                margin-left: 20px
+            }
+        </style>
+
+        <div class="list-author-shortcode-wrapper"></div>
         <?php foreach ($arrayOfPostsByAuthor as $author => $arrayOfPostsDetails): ?>
-
-        <ul class="list-author-snippet-single-author">
-            <li>User: <?php echo $author; ?> </li>
-            <li>Recent Posts:
-                <ul>
-
-                    <?php foreach ($arrayOfPostsDetails as $singlePost) : ?>
-
-                        <li><?php echo $singlePost->post_title; ?></li>
-
-                    <?php endforeach; ?>
-
-                </ul>
-            </li>
-
-        </ul>
-
-
+        <?php $user_info = get_userdata($author); ?>
+        <div class="list-author-single">
+        <div class="author-gravitar-image">
+            <img <?php echo get_avatar($author, 100); ?>
+        </div>
+        <div class="author-recent-posts">
+            <div class="author-nice-name"><?php echo $user_info->user_nicename; ?></div>
+            <div class="">Recent Posts:</div>
+            <ul class="list-of-posts">
+                <?php foreach ($arrayOfPostsDetails as $singlePost) : ?>
+                    <li><?php echo $singlePost->post_title; ?></li>
+                <?php endforeach; ?>
+            </ul>
+        </div>
     <?php endforeach; ?>
         </div>
 
-        <?php //---STOP EDITING----------------------
+    <?php
     }
 
 }//end if
