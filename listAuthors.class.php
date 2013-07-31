@@ -87,7 +87,7 @@ class listAuthors
 
             // Get user data
             $currentAuthor = get_userdata($singleUserID->ID);
-
+            //hi
             //get the table name, start with the table prefix
             $table = $wpdb->base_prefix;
             //if this is the main site, the table we need to query wont have the "%d_" in the table name.
