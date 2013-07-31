@@ -20,26 +20,6 @@ if (!function_exists('createListAuthorDisplay')) {
             return 'Sorry, no author found.';
         }?>
 
-        <style>
-            .author-gravitar-image {
-                float: left;
-                padding-right: 1em
-            }
-
-            .list-author-single {
-                clear: both
-            }
-
-            .list-author-single .author-nice-name {
-                font-size: 1.2em;
-                font-weight: 700
-            }
-
-            .list-author-single ul.list-of-posts {
-                margin-left: 20px
-            }
-        </style>
-
         <div class="list-author-shortcode-wrapper"></div>
         <?php foreach ($arrayOfPostsByAuthor as $author => $arrayOfPostsDetails): ?>
         <?php $user_info = get_userdata($author); ?>
@@ -49,10 +29,13 @@ if (!function_exists('createListAuthorDisplay')) {
         </div>
         <div class="author-recent-posts">
             <div class="author-nice-name"><?php echo $user_info->user_nicename; ?></div>
-            <div class="">Recent Posts:</div>
+            <div class="author-recent-posts">Recent Posts:</div>
             <ul class="list-of-posts">
                 <?php foreach ($arrayOfPostsDetails as $singlePost) : ?>
-                    <li><?php echo $singlePost->post_title; ?></li>
+                    <li><a href="<?php echo $singlePost->guid; ?>"><?php echo $singlePost->post_title; ?></a> posted
+                        <?php echo human_time_diff(get_the_time('U', $singlePost->ID), current_time('timestamp')); ?>
+                        ago
+                    </li>
                 <?php endforeach; ?>
             </ul>
         </div>
@@ -62,4 +45,13 @@ if (!function_exists('createListAuthorDisplay')) {
     <?php
     }
 
+    /**
+     * Enqueue the default style sheet (only if there isn't another function named createListAuthorDisplay() )
+     */
+    function enqueueDefaultListAuthorDisplayStyles()
+    {
+        wp_enqueue_style('MultisiteAuthorPostStyles', plugins_url('MultisiteAuthorPostStyles.css', __FILE__));
+    }
+
 }//end if
+

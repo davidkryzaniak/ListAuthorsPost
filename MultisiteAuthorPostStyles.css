@@ -1,0 +1,17 @@
+.author-gravitar-image {
+	float: left;
+	padding-right: 1em
+}
+
+.list-author-single {
+	clear: both
+}
+
+.list-author-single .author-nice-name {
+	font-size: 1.2em;
+	font-weight: 700
+}
+
+.list-author-single ul.list-of-posts {
+	margin-left: 20px
+}

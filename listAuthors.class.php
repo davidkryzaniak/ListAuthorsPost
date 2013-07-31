@@ -24,6 +24,12 @@ class listAuthors
     {
         //initialize the shortcode. If a shortcode is used, call listAuthorsRunner()
         add_shortcode('ListAuthors', array($this, 'listAuthorsRunner'));
+
+        //If there isn't a display setup yet, pull the default
+        if (!function_exists('createListAuthorDisplay')) {
+            require_once('ListAuthorDisplay.php');
+            add_action('wp_enqueue_scripts', 'enqueueDefaultListAuthorDisplayStyles');
+        }
     }
 
     /**
@@ -41,10 +47,7 @@ class listAuthors
         $theAuthorsIDs = $this->getAuthorIDs(); //get the authors
         $postsByAuthors = $this->getPostsByAuthorsIDs($theAuthorsIDs);
 
-        //If there isn't a display setup yet, pull the default
-        if (!function_exists('createListAuthorDisplay')) {
-            require_once('ListAuthorDisplay.php');
-        }
+        print_r($postsByAuthors);
 
         //echo or return the HTML
         return createListAuthorDisplay($postsByAuthors); //using a return for future expansion
@@ -102,10 +105,14 @@ class listAuthors
                 )
             );
 
-            $listOfPostsByAuthorID[$singleUserID->ID] = $this->getSinglePostDetails(
-                $currentAuthor->primary_blog,
-                $posts
-            );
+            $postsDetails = array();
+            foreach ($posts as $singlePost) {
+                $postsDetails[] = $this->getSinglePostDetails(
+                    $singlePost,
+                    $currentAuthor->primary_blog
+                );
+            }
+            $listOfPostsByAuthorID[$singleUserID->ID] = $postsDetails;
 
         }
 
@@ -119,13 +126,9 @@ class listAuthors
      * @param array $arrayOfPostIDs the array of posts.
      * @return array
      */
-    private function getSinglePostDetails($blogID = 1, $arrayOfPostIDs = array())
+    private function getSinglePostDetails($postID, $blogID = 1)
     {
-        $results = array();
-        foreach ($arrayOfPostIDs as $singlePostID) {
-            $results[] = get_blog_post($blogID, $singlePostID);
-        }
-        return $results;
+        return get_blog_post($blogID, $postID);
     }
 
     /**
